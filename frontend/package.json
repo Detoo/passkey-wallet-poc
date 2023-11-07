@@ -1,0 +1,41 @@
+{
+  "name": "passkey-wallet-poc-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "6.4.2",
+    "@fortawesome/free-solid-svg-icons": "6.4.2",
+    "@fortawesome/react-fontawesome": "0.2.0",
+    "@hexagon/base64": "1.1.28",
+    "@simplewebauthn/browser": "7.4.0",
+    "@simplewebauthn/server": "7.4.0",
+    "big.js": "6.2.1",
+    "permissionless": "0.0.8",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "reflect-metadata": "0.1.13",
+    "next": "13.5.6",
+    "typedi": "0.10.0",
+    "use-debounce": "9.0.4",
+    "viem": "1.16.6"
+  },
+  "devDependencies": {
+    "@testdeck/di-typedi": "0.3.3",
+    "@types/big.js": "6.2.1",
+    "@types/node": "20.8.7",
+    "@types/react": "18.2.31",
+    "@types/react-dom": "18.2.14",
+    "autoprefixer": "10.4.16",
+    "eslint": "8.52.0",
+    "eslint-config-next": "13.5.6",
+    "postcss": "8.4.31",
+    "tailwindcss": "3.3.3",
+    "typescript": "5.2.2"
+  }
+}

@@ -1,0 +1,33 @@
+.inputForm {
+    text-align: center;
+    padding: 6rem 6rem 12rem 6rem;
+}
+
+.inputForm input {
+    background: darkslategray;
+}
+
+.inputForm button {
+    width: 256px;
+    padding: 0.25rem 0.75rem;
+    background-color: hsl(336 80% 57.8%);
+    color: white;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+.inputForm button:hover:enabled {
+    background-color: hsl(339 84.1% 62.6%)
+}
+
+.inputForm button:disabled {
+    background-color: hsl(197 6.8% 13.6%)
+}
+
+.messageBody {
+    margin-right: 0.25rem;
+}
+
+.messageActivityIndicator {
+    margin-right: 0.25rem;
+}

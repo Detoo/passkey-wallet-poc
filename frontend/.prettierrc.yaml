@@ -1,0 +1,2 @@
+# Somehow IntelliJ's own TypeScript coding style does not allow disabling trailing semicolons, so we have to set it explicitly.
+semi: false
