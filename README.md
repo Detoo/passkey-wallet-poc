@@ -1,4 +1,9 @@
+![demo](./res/demo.gif)
+
 # Passkey Wallet Proof-of-Concept
+
+Live demo @ [https://passkey-wallet-poc.detoo.info/](https://passkey-wallet-poc.detoo.info/)
+> Note: you might need a newer version of iOS or Android in order to use the Passkey feature.
 
 The project demonstrates the ability to hold an account, sign & publish arbitrary Ethereum VM transactions 
 using your Passkey device (ex. mobile phone's fingerprint reader, Face ID, etc.) without holding any crypto as prerequisites. 
