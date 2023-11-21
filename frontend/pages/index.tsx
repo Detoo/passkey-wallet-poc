@@ -1,9 +1,8 @@
-"use client"
-
 import "reflect-metadata" // this shim is required
 import { Container } from "typedi"
 import { useEffect, useMemo, useState } from "react"
 import Big from "big.js"
+import base64 from "@hexagon/base64"
 import utilStyles from "../styles/utils.module.css"
 import {
   Address,
@@ -123,6 +122,140 @@ export default function Home() {
     return { write }
   }
 
+  const useSubscribeTokenReceipt = (
+    serviceWorkerRegistration: ServiceWorkerRegistration | undefined,
+    userAddress: Address | undefined,
+    onSuccess?: (sub: PushSubscription) => void,
+    onMutate?: () => void,
+    onError?: (e: any) => void
+  ) => {
+    const write = useMemo(() => {
+      if (userAddress) {
+        async function helper() {
+          try {
+            if (onMutate) {
+              onMutate()
+            }
+
+            // Request permission if needed.
+            setMessage({ body: "Requesting permission..." })
+            const permission = await Notification.requestPermission()
+            if (permission !== "granted") {
+              if (onError) {
+                onError("The user does not accept to receive token receipt notifications.")
+              }
+              return
+            }
+            console.log("The user accepted to receive token receipt notifications.")
+            setMessage({ body: "The user accepted to receive token receipt notifications." })
+
+            if (!serviceWorkerRegistration) {
+              setMessage({ body: "service worker not ready, abort subscription." })
+              console.warn("service worker not ready, abort subscription")
+              return
+            }
+
+            const sub = await serviceWorkerRegistration!.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: new Uint8Array(base64.toArrayBuffer(process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY, true))
+            })
+            setWebPushSubscription(sub)
+            console.log("subscribed:", { sub })
+
+            setMessage({ body: "Registering subscription..." })
+            // Record subscription on persistent store
+            await fetch("/api/notification", {
+              method: "POST",
+              headers: {
+                "Content-type": "application/json"
+              },
+              body: JSON.stringify({
+                action: "subscribe",
+                payload: {
+                  address: userAddress,
+                  sub
+                }
+              })
+            })
+
+            console.log("registered subscription:", { sub })
+
+            if (onSuccess) {
+              onSuccess(sub)
+            }
+          } catch (e: any) {
+            if (onError) {
+              console.error({ error: e })
+              onError(e)
+            }
+          }
+        }
+
+        return () => helper().catch(e => console.error("[useSubscribeTokenReceipt] Unexpected error:", e))
+      } else {
+        return undefined
+      }
+    }, [serviceWorkerRegistration, userAddress, onSuccess, onMutate, onError])
+
+    return { write }
+  }
+
+  const useUnsubscribeTokenReceipt = (
+    webPushSubscription: PushSubscription | undefined,
+    onSuccess?: (sub: PushSubscription) => void,
+    onMutate?: () => void,
+    onError?: (e: any) => void
+  ) => {
+    const write = useMemo(() => {
+      if (webPushSubscription && userAddress) {
+        async function helper() {
+          try {
+            if (onMutate) {
+              onMutate()
+            }
+
+            await webPushSubscription!.unsubscribe()
+
+            setWebPushSubscription(undefined)
+            console.log("unsubscribed:", { sub: webPushSubscription })
+
+            // Record subscription on persistent store
+            await fetch("/api/notification", {
+              method: "POST",
+              headers: {
+                "Content-type": "application/json"
+              },
+              body: JSON.stringify({
+                action: "unsubscribe",
+                payload: {
+                  address: userAddress,
+                  sub: webPushSubscription
+                }
+              })
+            })
+
+            console.log("deregistered subscription:", { sub: webPushSubscription })
+
+            if (onSuccess) {
+              onSuccess(webPushSubscription!)
+            }
+          } catch (e: any) {
+            if (onError) {
+              console.error({ error: e })
+              onError(e)
+            }
+          }
+        }
+
+        return () => helper().catch(e => console.error("[useUnsubscribeTokenReceipt] Unexpected error:", e))
+      } else {
+        return undefined
+      }
+    }, [webPushSubscription, userAddress, onSuccess, onMutate, onError])
+
+    return { write }
+  }
+
   function parseSigningError(e: any) {
     if (e.cause.message.includes("Invalid UserOp signature")) {
       return { body: `🙅 Invalid signature. Did you choose the correct passkey?` }
@@ -134,7 +267,8 @@ export default function Home() {
   }
 
   const [userInfo, setUserInfo] = useState<UserInfo | undefined>(undefined)
-  const [userId, setUserId] = useState<string>("")
+  // TODO test
+  const [userId, setUserId] = useState<string>("detoo")
   const [userAddress, setUserAddress] = useState<Address | undefined>(undefined)
   const [userBalance, setUserBalance] = useState<Big | undefined>(undefined)
   const [destKey, setDestKey] = useState<string>("")
@@ -146,6 +280,35 @@ export default function Home() {
     link?: string,
     showActivityIndicator?: boolean
   } | undefined>(undefined)
+  const [serviceWorkerRegistration, setServiceWorkerRegistration] = useState<ServiceWorkerRegistration | undefined>(undefined)
+  const [webPushSubscription, setWebPushSubscription] = useState<PushSubscription | undefined>(undefined)
+
+  useEffect(() => {
+    // TODO test
+    console.log({
+      window,
+      navigator,
+      navigatorServiceWorker: navigator.serviceWorker,
+      windowWorkbox: (window as any).workbox
+    })
+    // TODO test
+    // if (typeof window !== "undefined" && "serviceWorker" in navigator && window.workbox !== undefined) {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      // run only in browser
+      navigator.serviceWorker.ready.then(reg => {
+        reg.pushManager.getSubscription().then(sub => {
+          if (sub && !(sub.expirationTime && Date.now() > sub.expirationTime)) {
+            console.log("got existing subscription:", { webPushSubscription: sub, webPushSubscriptionJson: JSON.stringify(sub) })
+            setWebPushSubscription(sub)
+          } else {
+            console.log("no existing subscriptions.")
+          }
+        })
+        console.log("service worker is ready:", { serviceWorkerRegistration: reg })
+        setServiceWorkerRegistration(reg)
+      })
+    }
+  }, [])
 
   const [debouncedUserId] = useDebounce(userId, DEBOUNCE_DELAY_MS)
   const [debouncedDestKey] = useDebounce(destKey, DEBOUNCE_DELAY_MS)
@@ -175,6 +338,25 @@ export default function Home() {
       setMessage({ body: "Tx written on block!", link: `https://goerli.basescan.org/tx/${txHash}` })
     },
     () => setMessage({ body: "Pending...", showActivityIndicator: true }),
+    (e: any) => setMessage(parseSigningError(e))
+  )
+
+  const { write: subscribeTokenReceipt } = useSubscribeTokenReceipt(
+    serviceWorkerRegistration,
+    userAddress,
+    (sub) => {
+      setMessage({ body: `Subscribed: ${JSON.stringify(sub)}` })
+    },
+    () => setMessage({ body: "Subscribing...", showActivityIndicator: true }),
+    (e: any) => setMessage(parseSigningError(e))
+  )
+
+  const { write: unsubscribeTokenReceipt } = useUnsubscribeTokenReceipt(
+    webPushSubscription,
+    (sub) => {
+      setMessage({ body: `Unsubscribed: ${JSON.stringify(sub)}` })
+    },
+    () => setMessage({ body: "Unsubscribing...", showActivityIndicator: true }),
     (e: any) => setMessage(parseSigningError(e))
   )
 
@@ -251,6 +433,13 @@ export default function Home() {
             <p>{userAddress ?? "unknown"}</p>
             <p>has {userBalance ? userBalance.toFixed() : "n/a"} tokens</p>
           </div>
+          {webPushSubscription
+            ? (<button onClick={unsubscribeTokenReceipt}>
+              Disable Notifications
+            </button>)
+            : (<button onClick={subscribeTokenReceipt}>
+              Enable Notifications
+            </button>)}
           <input type="text" placeholder="Send to" value={destKey}
                  onChange={e => setDestKey(e.target.value)} />
           <div>
