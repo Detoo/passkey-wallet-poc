@@ -24,6 +24,7 @@ contract PasskeyAccountFactory {
     IEntryPoint public immutable entryPoint;
 
     mapping(string => User) public _userMap; // userId -> User
+    mapping(address => string) public _userIdMap; // userAddress -> userId
 
     constructor(IEntryPoint _entryPoint) {
         accountImplementation = new PasskeyAccount(_entryPoint);
@@ -70,6 +71,12 @@ contract PasskeyAccountFactory {
             y: y,
             salt: salt
         });
+        _userIdMap[getAddress(
+            credentialId,
+            x,
+            y,
+            salt
+        )] = userId;
     }
 
     /**
@@ -83,23 +90,27 @@ contract PasskeyAccountFactory {
     ) public view returns (address) {
         return
             Create2.computeAddress(
-                bytes32(salt),
-                keccak256(
-                    abi.encodePacked(
-                        type(ERC1967Proxy).creationCode,
-                        abi.encode(
-                            address(accountImplementation),
-                            abi.encodeCall(
-                                PasskeyAccount.initialize,
-                                (credentialId, x, y)
-                            )
+            bytes32(salt),
+            keccak256(
+                abi.encodePacked(
+                    type(ERC1967Proxy).creationCode,
+                    abi.encode(
+                        address(accountImplementation),
+                        abi.encodeCall(
+                            PasskeyAccount.initialize,
+                            (credentialId, x, y)
                         )
                     )
                 )
-            );
+            )
+        );
     }
-    
+
     function getUser(string calldata userId) external view returns (User memory) {
         return _userMap[userId];
+    }
+
+    function getUserId(address userAddress) external view returns (string memory) {
+        return _userIdMap[userAddress];
     }
 }

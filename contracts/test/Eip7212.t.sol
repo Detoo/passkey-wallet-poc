@@ -5,10 +5,10 @@ import "forge-std/Test.sol";
 import "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import "@account-abstraction/contracts/interfaces/UserOperation.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { ERC20PresetMinterPauser } from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import { PasskeyAccountFactory } from "../src/PasskeyAccountFactory.sol";
-import { PasskeyAccount } from "../src/PasskeyAccount.sol";
-import { Base64Url } from "../src/lib/base64url/Base64Url.sol";
+import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {PasskeyAccountFactory} from "../src/PasskeyAccountFactory.sol";
+import {PasskeyAccount} from "../src/PasskeyAccount.sol";
+import {Base64Url} from "../src/lib/base64url/Base64Url.sol";
 
 contract Eip7212Test is Test {
     // P256Verifier was deployed @ 10367893
@@ -143,7 +143,7 @@ contract Eip7212Test is Test {
             maxFeePerGas: 100000050,
             maxPriorityFeePerGas: 100000050,
             paymasterAndData: abi.encodePacked(paymaster),
-            // Not important since operation won't reach signature verification.
+        // Not important since operation won't reach signature verification.
             signature: abi.encode(
                 0,
                 0,
@@ -183,5 +183,19 @@ contract Eip7212Test is Test {
 
         PasskeyAccount newAccount = accountFactory.createAccount(userId, credentialId, x, y, salt);
         assertEq(address(newAccount), address(account));
+    }
+
+    function test_reverse_userId_lookup() public {
+        address userAddress = accountFactory.getAddress(
+            credentialId,
+            x,
+            y,
+            salt
+        );
+
+        assertEq(
+            accountFactory.getUserId(userAddress),
+            userId
+        );
     }
 }
