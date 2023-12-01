@@ -1,5 +1,5 @@
 import webPush from "web-push"
-import { hexToBigInt, formatEther } from "viem"
+import { hexToBigInt, formatEther, getAddress } from "viem"
 import { kv } from "@vercel/kv"
 import { NextApiRequest, NextApiResponse } from "next"
 
@@ -24,6 +24,8 @@ export default async function handler(
         const amount = +formatEther(hexToBigInt(log.data))
         console.log({ event: "TransferEvent", from, to, amount })
 
+        const walletName = getAddress(to)
+
         // Get subscription from persistent store
         const addressKey = to.toLowerCase()
         const endpoints = await kv.smembers(addressKey)
@@ -32,7 +34,7 @@ export default async function handler(
           if (subscription) {
             await webPush.sendNotification(
               subscription as any,
-              JSON.stringify({ title: "PasskeyWallet", message: `Received ${amount} tokens` })
+              JSON.stringify({ title: "PasskeyWallet", message: `${walletName} received ${amount} tokens` })
             )
             console.log({ event: "NotificationSent", subscription })
             count += 1
