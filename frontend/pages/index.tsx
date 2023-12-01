@@ -164,7 +164,7 @@ export default function Home() {
 
             setMessage({ body: "Registering subscription..." })
             // Record subscription on persistent store
-            await fetch("/api/notification", {
+            const res = await fetch("/api/notification", {
               method: "POST",
               headers: {
                 "Content-type": "application/json"
@@ -177,6 +177,10 @@ export default function Home() {
                 }
               })
             })
+
+            if (!res.ok) {
+              throw new Error(`Unable to register notification, reason: ${res.statusText}`)
+            }
 
             console.log("registered subscription:", { sub })
 
@@ -214,13 +218,8 @@ export default function Home() {
               onMutate()
             }
 
-            await webPushSubscription!.unsubscribe()
-
-            setWebPushSubscription(undefined)
-            console.log("unsubscribed:", { sub: webPushSubscription })
-
             // Record subscription on persistent store
-            await fetch("/api/notification", {
+            const res = await fetch("/api/notification", {
               method: "POST",
               headers: {
                 "Content-type": "application/json"
@@ -233,6 +232,10 @@ export default function Home() {
                 }
               })
             })
+
+            if (!res.ok) {
+              throw new Error(`Unable to unregister notification, reason: ${res.statusText}`)
+            }
 
             console.log("deregistered subscription:", { sub: webPushSubscription })
 
@@ -280,35 +283,12 @@ export default function Home() {
     link?: string,
     showActivityIndicator?: boolean
   } | undefined>(undefined)
-  const [serviceWorkerRegistration, setServiceWorkerRegistration] = useState<ServiceWorkerRegistration | undefined>(undefined)
-  const [webPushSubscription, setWebPushSubscription] = useState<PushSubscription | undefined>(undefined)
 
-  useEffect(() => {
-    // TODO test
-    console.log({
-      window,
-      navigator,
-      navigatorServiceWorker: navigator.serviceWorker,
-      windowWorkbox: (window as any).workbox
-    })
-    // TODO test
-    // if (typeof window !== "undefined" && "serviceWorker" in navigator && window.workbox !== undefined) {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      // run only in browser
-      navigator.serviceWorker.ready.then(reg => {
-        reg.pushManager.getSubscription().then(sub => {
-          if (sub && !(sub.expirationTime && Date.now() > sub.expirationTime)) {
-            console.log("got existing subscription:", { webPushSubscription: sub, webPushSubscriptionJson: JSON.stringify(sub) })
-            setWebPushSubscription(sub)
-          } else {
-            console.log("no existing subscriptions.")
-          }
-        })
-        console.log("service worker is ready:", { serviceWorkerRegistration: reg })
-        setServiceWorkerRegistration(reg)
-      })
-    }
-  }, [])
+  const [serviceWorkerRegistration, setServiceWorkerRegistration] = useState<ServiceWorkerRegistration | undefined>(undefined)
+  // Actual callable web-push subscription object
+  const [webPushSubscription, setWebPushSubscription] = useState<PushSubscription | undefined>(undefined)
+  // Indicate if the web-push subscription is registered on our back-end
+  const [hasNotification, setHasNotification] = useState(false)
 
   const [debouncedUserId] = useDebounce(userId, DEBOUNCE_DELAY_MS)
   const [debouncedDestKey] = useDebounce(destKey, DEBOUNCE_DELAY_MS)
@@ -345,6 +325,7 @@ export default function Home() {
     serviceWorkerRegistration,
     userAddress,
     (sub) => {
+      setHasNotification(true)
       setMessage({ body: `Subscribed: ${JSON.stringify(sub)}` })
     },
     () => setMessage({ body: "Subscribing...", showActivityIndicator: true }),
@@ -354,11 +335,35 @@ export default function Home() {
   const { write: unsubscribeTokenReceipt } = useUnsubscribeTokenReceipt(
     webPushSubscription,
     (sub) => {
+      setHasNotification(false)
       setMessage({ body: `Unsubscribed: ${JSON.stringify(sub)}` })
     },
     () => setMessage({ body: "Unsubscribing...", showActivityIndicator: true }),
     (e: any) => setMessage(parseSigningError(e))
   )
+
+  // Trigger on page load
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      // run only in browser
+      navigator.serviceWorker.ready.then(reg => {
+        // Load existing subscription
+        reg.pushManager.getSubscription().then(sub => {
+          if (sub && !(sub.expirationTime && Date.now() > sub.expirationTime)) {
+            console.log("got existing subscription:", {
+              webPushSubscription: sub,
+              webPushSubscriptionJson: JSON.stringify(sub)
+            })
+            setWebPushSubscription(sub)
+          } else {
+            console.log("no existing subscriptions.")
+          }
+        })
+        console.log("service worker is ready:", { serviceWorkerRegistration: reg })
+        setServiceWorkerRegistration(reg)
+      })
+    }
+  }, [])
 
   // Update user account info
   useEffect(() => {
@@ -393,6 +398,7 @@ export default function Home() {
     fetchAndSetUserBalance(destAddress, setDestBalance).catch(e => console.error("Error fetching dest user balance:", e))
   }, [destAddress])
 
+  // Watch token receipt on user address
   useEffect(() => {
     let unwatch: any
     if (userAddress) {
@@ -414,6 +420,34 @@ export default function Home() {
     }
   }, [userAddress])
 
+  // Check notification subscription on user address
+  useEffect(() => {
+    async function helper() {
+      if (userAddress && webPushSubscription) {
+        const res = await fetch(
+          "/api/notification?" + new URLSearchParams({
+            address: userAddress.toLowerCase(),
+            endpoint: webPushSubscription.endpoint
+          }),
+          {
+            method: "GET",
+            headers: {
+              "Content-type": "application/json"
+            }
+          })
+        const hasNotification = (await res.json()).hasNotification
+        console.log("Check notification subscription:", {
+          userAddress,
+          endpoint: webPushSubscription.endpoint,
+          hasNotification
+        })
+        setHasNotification(hasNotification)
+      }
+    }
+
+    helper().catch(e => console.error("Unable to check user address notification status", e))
+  }, [userAddress, webPushSubscription])
+
   return (
     <main>
       {!userInfo || userInfo.credentialId === "0x" ? (
@@ -433,7 +467,7 @@ export default function Home() {
             <p>{userAddress ?? "unknown"}</p>
             <p>has {userBalance ? userBalance.toFixed() : "n/a"} tokens</p>
           </div>
-          {webPushSubscription
+          {hasNotification
             ? (<button onClick={unsubscribeTokenReceipt}>
               Disable Notifications
             </button>)

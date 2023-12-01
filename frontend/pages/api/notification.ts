@@ -6,10 +6,9 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    // Read
     try {
-      const sub = await kv.get("sub")
-      res.status(200).json(sub)
+      const addressKey = (req.query.address! as string).toLowerCase()
+      res.status(200).json({ hasNotification: !!(await kv.sismember(addressKey, req.query.endpoint)) })
     } catch (e: any) {
       const payload = { event: "NotificationGetFailed", reason: e.toString() }
       console.error(payload)
@@ -28,18 +27,6 @@ export default async function handler(
         await kv.sadd(addressKey, sub.endpoint)
         await kv.set(sub.endpoint, JSON.stringify(sub))
 
-        // TODO deprecated: brute force data structure
-        // const subs: any[] = await kv.get(key) || []
-        // const idx = subs.findIndex(item => item.endpoint === sub.endpoint)
-        // if (idx > -1) {
-        //   subs[idx] = sub
-        // } else {
-        //   subs.push(sub)
-        // }
-        // await kv.set(
-        //   data.payload.address.toLowerCase(),
-        //   JSON.stringify(subs)
-        // )
       } else if (data.action === "unsubscribe") {
         console.log("unsubscribe:", data)
         const addressKey = data.payload.address.toLowerCase()
@@ -48,16 +35,6 @@ export default async function handler(
           await kv.del(sub.endpoint)
         }
 
-        // TODO deprecated: brute force data structure
-        // const subs: any[] = await kv.get(key) || []
-        // const idx = subs.findIndex(item => item.endpoint === sub.endpoint)
-        // if (idx > -1) {
-        //   subs.splice(idx, 1)
-        // }
-        // await kv.set(
-        //   data.payload.address.toLowerCase(),
-        //   JSON.stringify(subs)
-        // )
       } else {
         const msg = `unexpected action:${data.action}`
         console.error(msg)
