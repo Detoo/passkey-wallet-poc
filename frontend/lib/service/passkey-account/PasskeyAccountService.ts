@@ -43,7 +43,7 @@ export interface UserInfo {
   salt: bigint
 }
 
-export const PASSKEY_ACCOUNT_FACTORY_ADDRESS = "0x70e8b15F2f0D4e4162D899f0c69831B2Fb7EE8d7"
+export const PASSKEY_ACCOUNT_FACTORY_ADDRESS = "0x63A28A5A169aA1b4650759CfEED8597ce7Ba5910"
 export const TEST_TOKEN_ADDRESS = "0xb8c7A8A40BF6A0eF68e8611a337eFc45178BDe8b"
 export const ENTRY_POINT_ADDRESS = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
 export const PAYMASTER_AND_DATA: Hex = "0xc059F997624fd240214c025E8bb5572E7c65182e"
@@ -76,13 +76,21 @@ export class PasskeyAccountService {
         {
           "inputs": [
             {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "_userIdMap",
+          "outputs": [
+            {
               "internalType": "string",
-              "name": "userId",
+              "name": "",
               "type": "string"
             }
           ],
-          "name": "UserIdTaken",
-          "type": "error"
+          "stateMutability": "view",
+          "type": "function"
         },
         {
           "inputs": [
@@ -253,6 +261,25 @@ export class PasskeyAccountService {
               "internalType": "struct PasskeyAccountFactory.User",
               "name": "",
               "type": "tuple"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "userAddress",
+              "type": "address"
+            }
+          ],
+          "name": "getUserId",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
             }
           ],
           "stateMutability": "view",
