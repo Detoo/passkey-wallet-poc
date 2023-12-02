@@ -270,8 +270,7 @@ export default function Home() {
   }
 
   const [userInfo, setUserInfo] = useState<UserInfo | undefined>(undefined)
-  // TODO test
-  const [userId, setUserId] = useState<string>("detoo")
+  const [userId, setUserId] = useState<string>("")
   const [userAddress, setUserAddress] = useState<Address | undefined>(undefined)
   const [userBalance, setUserBalance] = useState<Big | undefined>(undefined)
   const [destKey, setDestKey] = useState<string>("")

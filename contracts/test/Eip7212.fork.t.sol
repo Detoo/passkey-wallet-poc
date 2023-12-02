@@ -11,10 +11,6 @@ import {PasskeyAccount} from "../src/PasskeyAccount.sol";
 import {Base64Url} from "../src/lib/base64url/Base64Url.sol";
 import {ERC20Drip} from "../src/lib/erc20-drip/ERC20Drip.sol";
 
-interface IPaymaster {
-    function deposit() external payable;
-}
-
 contract Eip7212ForkTest is Test {
     // PasskeyAccountFactory was deployed @ 13146696
     uint256 public forkBlock = 13146696;
