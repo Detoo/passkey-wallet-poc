@@ -1,3 +1,4 @@
+import "reflect-metadata" // this shim is required
 import webPush from "web-push"
 import { hexToBigInt, formatEther, getAddress, getContract } from "viem"
 import { kv } from "@vercel/kv"
