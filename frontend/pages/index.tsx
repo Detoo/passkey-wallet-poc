@@ -325,7 +325,7 @@ export default function Home() {
     userAddress,
     (sub) => {
       setHasNotification(true)
-      setMessage({ body: `Subscribed: ${JSON.stringify(sub)}` })
+      setMessage({ body: "Enabled token notification for the user" })
     },
     () => setMessage({ body: "Subscribing...", showActivityIndicator: true }),
     (e: any) => setMessage(parseSigningError(e))
@@ -335,7 +335,7 @@ export default function Home() {
     webPushSubscription,
     (sub) => {
       setHasNotification(false)
-      setMessage({ body: `Unsubscribed: ${JSON.stringify(sub)}` })
+      setMessage({ body: "Disabled token notification for the user" })
     },
     () => setMessage({ body: "Unsubscribing...", showActivityIndicator: true }),
     (e: any) => setMessage(parseSigningError(e))
