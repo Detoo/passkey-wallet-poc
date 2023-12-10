@@ -19,6 +19,8 @@ get notified whenever his account has received tokens. Making a true wallet expe
 
 ## PWA Installation
 
+![demo-pwa-notification](./res/demo-pwa-notification.gif)
+
 You can use the app as-is in a web browser; however, to get the native app experience such as 
 token receipt notification, you can install it as a PWA 
 (the tutorial below uses iOS as the example, the steps on Android are similar):
