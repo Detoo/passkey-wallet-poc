@@ -304,7 +304,7 @@ export default function Home() {
     userInfo?.id,
     (userId, txHash) => {
       fetchAndSetUserInfo(userId).finally()
-      setMessage({ body: "Tx written on block!", link: `https://goerli.basescan.org/tx/${txHash}` })
+      setMessage({ body: "Tx written on block!", link: `https://sepolia.basescan.org/tx/${txHash}` })
     },
     () => setMessage({ body: "Pending...", showActivityIndicator: true }),
     (e: any) => setMessage(parseSigningError(e))
@@ -314,7 +314,7 @@ export default function Home() {
     (from, to, txHash) => {
       fetchAndSetUserBalance(from, setUserBalance).finally()
       fetchAndSetUserBalance(to, setDestBalance).finally()
-      setMessage({ body: "Tx written on block!", link: `https://goerli.basescan.org/tx/${txHash}` })
+      setMessage({ body: "Tx written on block!", link: `https://sepolia.basescan.org/tx/${txHash}` })
     },
     () => setMessage({ body: "Pending...", showActivityIndicator: true }),
     (e: any) => setMessage(parseSigningError(e))

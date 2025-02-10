@@ -12,27 +12,27 @@ import {Base64Url} from "../src/lib/base64url/Base64Url.sol";
 import {ERC20Drip} from "../src/lib/erc20-drip/ERC20Drip.sol";
 
 contract Eip7212ForkTest is Test {
-    // PasskeyAccountFactory was deployed @ 13146696
-    uint256 public forkBlock = 13146696;
+    // PasskeyAccountFactory was deployed @ 21699892
+    uint256 public forkBlock = 21699892;
 
     // From zk-faceID
-    address payable public bundler = payable(0x433711cDa558c0fa32a4b8554939ab8740B9f5AC);
-    bytes public paymasterAndData = hex"3Ac456E5ffFaA35787315037300CDd33387125B800000000000000000000000000000000000000000000000000000000656aab8b00000000000000000000000000000000000000000000000000000000000000000ef62257be414d3ac07eeee8abfc7ce0faa6769a41370b47829f7b75f69cb7c76bb03c14ee11c9dcb013c5b0da55d4b85ac0c4ee91e35b9a3f07ffd38ec298351b";
+    address payable public bundler = payable(0x433700890211c1C776C391D414Cffd38efdd1811);
+    bytes public paymasterAndData = hex"00000000000000fb866daaa79352cc568a005d9600000067a99e6e00000000000015553754cf8297d30f09493616b8ab0ab95429a16ccc51480808847902dcef1f5c425b30d047d3dace68426f6abbb3cac98fcb0aa5145300a6b888324d524fbf1b";
     IEntryPoint public entryPoint = IEntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
-    PasskeyAccountFactory public accountFactory = PasskeyAccountFactory(0x63A28A5A169aA1b4650759CfEED8597ce7Ba5910);
-    ERC20Drip public token = ERC20Drip(0xb8c7A8A40BF6A0eF68e8611a337eFc45178BDe8b);
+    PasskeyAccountFactory public accountFactory = PasskeyAccountFactory(0x4CaC72faa1486b1F186EA8850218F8Fe8ed4Be57);
+    ERC20Drip public token = ERC20Drip(0x3E4e4d16530FE0AD88C8821eB48268285c3C8F60);
     PasskeyAccount public account;
     bytes public initCode;
 
     // Passkey
     // Public key should not change as long as we don't roll our Passkey
-    bytes credentialId = hex"b7158568f4c67f0b7ff1490c0fdb5d0bb4df0f06"; // txWFaPTGfwt_8UkMD9tdC7TfDwY
-    uint256 x = 0x54ede609d66d592a933acf56c47a47a26feca7c0fd701ea3474ae5acee1e0b6f;
-    uint256 y = 0xb66a2da9e308bd616e2a9ca4e2b957abac50e96b54c4c77e0367c69f8ed8dfe7;
+    bytes credentialId = hex"0b92f071525e71ccae743c7529ac356e1a465f69"; // C5LwcVJeccyudDx1Kaw1bhpGX2k
+    uint256 x = 0x5e888f62b508a5ce83b8712b4b48d12e489a08068dc9966c1e48b062fe9728d1;
+    uint256 y = 0x8f52ccb451cc4b9b59219df60d183c343ac7af662ea7fab5533f5b98f881d9fa;
     uint256 salt = 0;
 
     function setUp() public {
-        vm.createSelectFork(vm.rpcUrl("base_goerli"), forkBlock);
+        vm.createSelectFork(vm.rpcUrl("base_sepolia"), forkBlock);
 
         // From zk-faceID
         vm.label(address(bundler), "Bundler");
@@ -44,17 +44,17 @@ contract Eip7212ForkTest is Test {
         bytes memory authenticatorData = hex"49960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97631d00000000";
         string memory clientDataPrefix = '{"type":"webauthn.get","challenge":"';
         string memory clientDataPostfix = '","origin":"http://localhost:3000","crossOrigin":false}';
-        uint256 r = 0x02006d22807d41c08b9fd35c0a3903fb654ba92bd252dcbc5ce5577f8b644890;
-        uint256 s = 0x3b5d58e71565f7ddd17ab2f3a65c23481852d7368c87e1c782e2bcd7bcd56e62;
+        uint256 r = 0xd66354d3c99bc49f7167876705d8791ecc75cab3055e898639e461c2a072a923;
+        uint256 s = 0xeb1c6cfe62fa33ece1293f4740aa5fcf1784409c62c3b155462a2388546f0b63;
 
         account = PasskeyAccount(payable(accountFactory.getAddress(credentialId, x, y, salt)));
-        assertEq(address(account), 0xF52ccfa3e52a1E2bf0949A2D1BDE147f029a1506);
+        assertEq(address(account), 0x6E5e85AD368d7399bb0E9104d98E4166c0A7Cd94);
 
         initCode = abi.encodePacked(
             address(accountFactory),
             abi.encodeWithSelector(
                 PasskeyAccountFactory.createAccount.selector,
-                "alice",
+                "test0",
                 credentialId,
                 x,
                 y,
@@ -83,11 +83,11 @@ contract Eip7212ForkTest is Test {
             nonce: 0,
             initCode: initCode,
             callData: opCalldata,
-            callGasLimit: 255362,
-            verificationGasLimit: 1095055,
-            preVerificationGas: 51880,
-            maxFeePerGas: 172758756,
-            maxPriorityFeePerGas: 172758756,
+            callGasLimit: 144708,
+            verificationGasLimit: 1088334,
+            preVerificationGas: 172201,
+            maxFeePerGas: 1485712,
+            maxPriorityFeePerGas: 1485000,
             paymasterAndData: abi.encodePacked(paymasterAndData),
             signature: abi.encode(
                 r,

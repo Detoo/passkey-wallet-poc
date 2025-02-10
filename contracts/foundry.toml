@@ -10,5 +10,5 @@ remappings = [
 
 [rpc_endpoints]
 # All available network keywords:
-# https://github.com/foundry-rs/forge-std/blob/f73c73d2018eb6a111f35e4dae7b4f27401e9421/src/StdChains.sol#L180-L226
-base_goerli = "https://goerli.base.org"
+# https://github.com/foundry-rs/forge-std/blob/999be66ec94c78090087f674bbf52ce1cca12b75/src/StdChains.sol#L197-L276
+base_sepolia = "https://sepolia.base.org"

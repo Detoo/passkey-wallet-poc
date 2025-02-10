@@ -13,7 +13,7 @@ import {
 } from "viem"
 import { ViemService } from "@/lib/service/viem/ViemService"
 import { Config } from "@/lib/service/config/Config"
-import { baseGoerli } from "viem/chains"
+import { baseSepolia } from "viem/chains"
 import base64 from "@hexagon/base64"
 import {
   generateAuthenticationOptions,
@@ -43,8 +43,8 @@ export interface UserInfo {
   salt: bigint
 }
 
-export const PASSKEY_ACCOUNT_FACTORY_ADDRESS = "0x63A28A5A169aA1b4650759CfEED8597ce7Ba5910"
-export const TEST_TOKEN_ADDRESS = "0xb8c7A8A40BF6A0eF68e8611a337eFc45178BDe8b"
+export const PASSKEY_ACCOUNT_FACTORY_ADDRESS = "0x4CaC72faa1486b1F186EA8850218F8Fe8ed4Be57"
+export const TEST_TOKEN_ADDRESS = "0x3E4e4d16530FE0AD88C8821eB48268285c3C8F60"
 export const ENTRY_POINT_ADDRESS = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
 export const PAYMASTER_AND_DATA: Hex = "0xc059F997624fd240214c025E8bb5572E7c65182e"
 
@@ -725,16 +725,16 @@ export class PasskeyAccountService {
     })
 
     // CREATE THE CLIENTS
-    const pimlicoChain = "base-goerli"
+    const pimlicoChain = "84532" // base-sepolia
 
     const bundlerClient = createClient({
       transport: http(`https://api.pimlico.io/v1/${pimlicoChain}/rpc?apikey=${this.config.pimlicoApiKey}`),
-      chain: baseGoerli
+      chain: baseSepolia
     }).extend(bundlerActions).extend(pimlicoBundlerActions)
 
     const paymasterClient = createClient({
       transport: http(`https://api.pimlico.io/v2/${pimlicoChain}/rpc?apikey=${this.config.pimlicoApiKey}`),
-      chain: baseGoerli
+      chain: baseSepolia
     }).extend(pimlicoPaymasterActions)
 
     // GENERATE THE INITCODE
@@ -810,8 +810,8 @@ export class PasskeyAccountService {
       // For paymaster sponsorship
       //
 
-      // Dummy signature from a past valid PasskeyAccount creation (https://goerli.basescan.org/tx/0x73cd0c4bdefee0520692be355af2dea5c0edabb64e2eeff5d0fce5230546e9d1)
-      signature: "0xfcedd46b5cf4547119f1d1e2ea046d800fca63b61d82d2ddb890551d4f4d607fcb4dd0df143adb5bdfdaf3f1ac42ba0dc6370d39b7edf481a8177282877ba50500000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000002591915c3cda3f6f67bc331a2ad1e7faf6a98afbc2fefb21a6b0c3a85d7478bb9f1d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000247b2274797065223a22776562617574686e2e676574222c226368616c6c656e6765223a22000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000033222c226f726967696e223a2268747470733a2f2f706173736b65792d77616c6c65742d706f632e6465746f6f2e696e666f227d00000000000000000000000000",
+      // Dummy signature from a past valid PasskeyAccount creation (https://sepolia.basescan.org/tx/0x0e9bb61a6ee824d7859b6813c7bf87f648ae9064b2908d3824302e0d632349d0)
+      signature: "0xd66354d3c99bc49f7167876705d8791ecc75cab3055e898639e461c2a072a923eb1c6cfe62fa33ece1293f4740aa5fcf1784409c62c3b155462a2388546f0b6300000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000002549960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97631d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000247b2274797065223a22776562617574686e2e676574222c226368616c6c656e6765223a22000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037222c226f726967696e223a22687474703a2f2f6c6f63616c686f73743a33303030222c2263726f73734f726967696e223a66616c73657d000000000000000000",
 
       // No-op. Just to keep the linter happy.
       callGasLimit: 0n,
@@ -845,7 +845,7 @@ export class PasskeyAccountService {
     const userOperationHash = getUserOperationHash(
       {
         userOperation: sponsoredUserOperation,
-        chainId: baseGoerli.id,
+        chainId: baseSepolia.id,
         entryPoint: ENTRY_POINT_ADDRESS
       })
     console.log({ userOperationHash })
@@ -954,7 +954,7 @@ export class PasskeyAccountService {
 
     const txHash = receipt.receipt.transactionHash
 
-    console.log(`UserOperation included: https://goerli.basescan.org/tx/${txHash}`)
+    console.log(`UserOperation included: https://sepolia.basescan.org/tx/${txHash}`)
 
     return {
       userAddress: senderAddress,

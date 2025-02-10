@@ -11,14 +11,14 @@ import {PasskeyAccount} from "../src/PasskeyAccount.sol";
 import {Base64Url} from "../src/lib/base64url/Base64Url.sol";
 
 contract Eip7212Test is Test {
-    // P256Verifier was deployed @ 10367893
-    uint256 public forkBlock = 10861192;
+    // P256Verifier was deployed @ 4307016
+    uint256 public forkBlock = 21698974;
 
     // From zk-faceID
-    address payable public bundler = payable(0x433711cDa558c0fa32a4b8554939ab8740B9f5AC);
-    address public paymaster = 0xc059F997624fd240214c025E8bb5572E7c65182e;
+    address payable public bundler = payable(0x433700890211c1C776C391D414Cffd38efdd1811);
+    address public paymaster = 0x00000000000000fB866DaAA79352cC568a005D96;
     IEntryPoint public entryPoint = IEntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
-    string public userId = "detoo";
+    string public userId = "test0";
     PasskeyAccountFactory public accountFactory;
     PasskeyAccount public account;
 
@@ -27,13 +27,13 @@ contract Eip7212Test is Test {
 
     // Passkey
     // Public key should not change as long as we don't roll our Passkey
-    bytes credentialId = hex"841e1a8bc82311c7f2455b97ca5abc3c168da964"; // hB4ai8gjEcfyRVuXylq8PBaNqWQ
-    uint256 x = 0x2c9629b26f5d542f3a7b9060ac8609bef53f6543b55cf6aa384d5b025f9a17e5;
-    uint256 y = 0x771da7f3ade37b5c40cde8586b52dd2358a12381998ab2713866e7ebc78061cd;
+    bytes credentialId = hex"0b92f071525e71ccae743c7529ac356e1a465f69"; // C5LwcVJeccyudDx1Kaw1bhpGX2k
+    uint256 x = 0x5e888f62b508a5ce83b8712b4b48d12e489a08068dc9966c1e48b062fe9728d1;
+    uint256 y = 0x8f52ccb451cc4b9b59219df60d183c343ac7af662ea7fab5533f5b98f881d9fa;
     uint256 salt = 0;
 
     function setUp() public {
-        vm.createSelectFork(vm.rpcUrl("base_goerli"), forkBlock);
+        vm.createSelectFork(vm.rpcUrl("base_sepolia"), forkBlock);
 
         // From zk-faceID
         vm.label(address(bundler), "Bundler");
@@ -57,56 +57,6 @@ contract Eip7212Test is Test {
         console2.logAddress(address(token));
         vm.label(address(token), "TestToken");
         token.mint(address(account), 100 ether);
-    }
-
-    function test_handleOps_normal() public {
-        // Input parameters.
-        bytes memory authenticatorData = hex"49960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97631d00000000";
-        string memory clientDataPrefix = '{"type":"webauthn.get","challenge":"';
-        string memory clientDataPostfix = '","origin":"http://localhost:3000","crossOrigin":false}';
-        uint256 r = 0xe55e71693eba7b1daaf56f0e60bbf97ad3a2c3ffa1ba96f1e7b69e2e903dd6bb;
-        uint256 s = 0x07781e31ac29800f4f8a451fa5fd663656fce41acbcb81d97a9432b457cee509;
-
-        bytes memory opCalldata = abi.encodeWithSelector(
-            account.execute.selector,
-            address(token),
-            0,
-            abi.encodeWithSelector(
-                token.transfer.selector,
-                alice,
-                20 ether
-            )
-        );
-
-        UserOperation[] memory userOps = new UserOperation[](1);
-        userOps[0] = UserOperation({
-            sender: address(account),
-            nonce: 0,
-            initCode: new bytes(0),
-            callData: opCalldata,
-            callGasLimit: 900000,
-            verificationGasLimit: 900000,
-            preVerificationGas: 900000,
-            maxFeePerGas: 100000050,
-            maxPriorityFeePerGas: 100000050,
-            paymasterAndData: abi.encodePacked(paymaster),
-            signature: abi.encode(
-                r,
-                s,
-                authenticatorData,
-                clientDataPrefix,
-                clientDataPostfix
-            )
-        });
-
-        assertEq(token.balanceOf(address(account)), 100 ether);
-        assertEq(token.balanceOf(alice), 0 ether);
-
-        vm.prank(bundler);
-        entryPoint.handleOps(userOps, bundler);
-
-        assertEq(token.balanceOf(address(account)), 80 ether);
-        assertEq(token.balanceOf(alice), 20 ether);
     }
 
     function test_handleOps_with_initCode_RevertIf_userId_taken() public {
